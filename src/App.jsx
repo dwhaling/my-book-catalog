@@ -1,35 +1,43 @@
 import { useState, useEffect } from "react";
+import BookList from "./components/BookList";
+import { Routes, Route, Link } from "react-router-dom";
+import CatalogPage from "./pages/CatalogPage";
+import SearchPage from "./pages/SearchPage";
+import { Navigate } from "react-router-dom";
 
 function App() {
-  const [title, setTitle] = useState("");
-  const [author, setAuthor] = useState("");
   const [books, setBooks] = useState(() => {
     const storedBooks = localStorage.getItem("books");
     return storedBooks ? JSON.parse(storedBooks) : [];
   });
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState("");
+
 
   // save books to localStorage whenever 'books' state changes
   useEffect(() => {
     localStorage.setItem("books", JSON.stringify(books));
   }, [books]); // run useEffect whenever 'books' changes
 
+  function addBook(book) {
+    setBooks((prevBooks) => [...prevBooks, book]);
 
-  function handleSubmit(event) {
-    event.preventDefault(); // tells browser to NOT perform the default submit behavior.
+    setFeedbackMessage(`"${book.title}" added to your catalog`);
 
-    if (title.trim() === "" || author.trim() === "") {
-      return;
-    }
+    // Clear message after 2 seconds
+    setTimeout(() => {
+      setFeedbackMessage("");
+    }, 2000);
+  }
 
-    const newBook = {
-      title: title,
-      author: author,
-    };
-
-    setBooks([...books, newBook]);
-
-    setTitle("");
-    setAuthor("");
+  function addBookFromSearch(apiBook) {
+    addBook({
+      title: apiBook.title,
+      author: apiBook.author,
+    });
   }
 
   function handleDeleteBook(indexToDelete) {
@@ -37,38 +45,93 @@ function App() {
     setBooks(updatedBooks);
   }
 
+  async function handleSearchSubmit(e) {
+    e.preventDefault();
+
+    if (searchQuery.trim() === "") return;
+
+    setIsSearching(true);
+
+    try {
+      const response = await fetch(
+        `https://openlibrary.org/search.json?q=${encodeURIComponent(searchQuery)}`
+      );
+
+      const data = await response.json();
+
+      const results = data.docs.slice(0, 10).map((doc) => {
+        let coverUrl = null;
+
+        if (doc.cover_edition_key) {
+          coverUrl = `https://covers.openlibrary.org/b/olid/${doc.cover_edition_key}-M.jpg`;
+        } else if (doc.isbn && doc.isbn.length > 0) {
+          coverUrl = `https://covers.openlibrary.org/b/isbn/${doc.isbn[0]}-M.jpg`;
+        }
+
+        return {
+          title: doc.title,
+          author: doc.author_name ? doc.author_name[0] : "Unknown",
+          coverUrl,
+        };
+      });
+
+
+      setSearchResults(results);
+    } catch (error) {
+      console.error("Search failed", error);
+    } finally {
+      setIsSearching(false);
+    }
+  }
+
 
   return (
     <div>
-      <h1>My Book Catalog</h1>
+      <nav>
+        <Link to="/catalog">My Catalog</Link> |{" "}
+        <Link to="/search">Search</Link>
+      </nav>
 
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="Book Title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
+      {feedbackMessage && (
+        <div style={{
+          background: "#e6fffa",
+          border: "1px solid #38b2ac",
+          padding: "8px 12px",
+          margin: "12px 0",
+          borderRadius: "4px"
+        }}>
+          {feedbackMessage}
+        </div>
+      )}
+      
+      <Routes>
+        <Route path="/" element={<Navigate to="/catalog" />} /> 
+        <Route
+          path="/catalog"
+          element={
+            <CatalogPage
+              books={books}
+              onDeleteBook={handleDeleteBook}
+            />
+          }
         />
 
-        <input
-          type="text"
-          placeholder="Author"
-          value={author}
-          onChange={(e) => setAuthor(e.target.value)}
+        <Route
+          path="/search"
+          element={
+            <SearchPage
+              searchQuery={searchQuery}
+              searchResults={searchResults}
+              isSearching={isSearching}
+              onSearchQueryChange={(e) =>
+                setSearchQuery(e.target.value)
+              }
+              onSearchSubmit={handleSearchSubmit}
+              onAddBook={addBook}
+            />
+          }
         />
-
-        <button>Add Book</button>
-      </form>
-
-      <ul>
-        {books.map((book, index) => (
-          <li key={index}>
-            {book.title} — {book.author}
-            <button onClick={() => handleDeleteBook(index)}>🗑️</button>
-          </li>
-        ))}
-      </ul>
-
+      </Routes>
     </div>
   );
 }
