@@ -1,16 +1,18 @@
-import BookList from "../components/BookList";
+import CatalogGrid from "../components/CatalogGrid";
+import Sidebar from "../components/Sidebar";
+import TopBar from "../components/TopBar";
 
-function CatalogPage({ books, onDeleteBook }) {
+function CatalogPage({ books, allBooks, activeShelf, onShelfChange, onDeleteBook, onToggleShelf }) {
   return (
-    <>
-      <h1>My Book Catalog</h1>
-
-      {books.length === 0 ? (
-        <p>No books yet. Use the search page to add some.</p>
-      ) : (
-        <BookList books={books} onDeleteBook={onDeleteBook} />
-      )}
-    </>
+    <div className="page">
+      <TopBar />
+      <div className="layout">
+        <Sidebar allBooks={allBooks} activeShelf={activeShelf} onShelfChange={onShelfChange} />
+        <main className="content">
+          <CatalogGrid books={books} onDeleteBook={onDeleteBook} onToggleShelf={onToggleShelf}/>
+        </main>
+      </div>
+    </div>
   );
 }
 

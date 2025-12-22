@@ -1,11 +1,19 @@
+/* ---------- RESET / BASE ---------- */
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: system-ui, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  color: #213547;
+  background-color: #ffffff;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -13,56 +21,312 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
 body {
-  margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  background: #ffffff;
 }
+
+/* ---------- LINKS ---------- */
+
+a {
+  font-weight: 500;
+  color: #0b65c2;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* ---------- HEADINGS ---------- */
 
 h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+  font-size: 2rem;
+  line-height: 1.2;
+  margin: 0;
 }
+
+/* ---------- BUTTONS ---------- */
 
 button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
+  border-radius: 4px;
+  border: 1px solid #cfcfcf;
+  padding: 0.5em 0.9em;
+  font-size: 0.9em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background-color: #f7f7f7;
   cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+button:hover {
+  background-color: #eeeeee;
+}
+
+button:focus {
+  outline: none;
+}
+
+/* ---------- PAGE LAYOUT ---------- */
+
+.page {
+  width: 100%;
+  background: #fff;
+  color: #111;
+  font-family: Arial, sans-serif;
+}
+
+/* ---------- TOP BAR ---------- */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 16px;
+  border-bottom: 1px solid #ddd;
+}
+
+.brand {
+  font-weight: 700;
+  font-size: 20px;
+}
+
+.topbarSearch {
+  position: relative;
+  flex: 1;
+  max-width: 520px;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 7px 34px 7px 10px;
+  border: 1px solid #cfcfcf;
+  border-radius: 3px;
+  font-size: 13px;
+}
+
+.searchIcon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.6;
+  font-size: 14px;
+}
+
+.topbarNav {
+  margin-left: auto;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.navLink,
+.navLinkBtn {
+  font-size: 13px;
+  color: #0b65c2;
+  background: transparent;
+  border: none;
+  padding: 4px 6px;
+  cursor: pointer;
+}
+
+.navLink.active {
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+/* ---------- MAIN LAYOUT ---------- */
+
+.layout {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  width: 100%;
+  padding: 16px 24px;
+  box-sizing: border-box;
+  gap: 18px;
+}
+
+/* ---------- SIDEBAR ---------- */
+
+.sidebar {
+  border-right: 1px solid #e6e6e6;
+  padding-right: 10px;
+}
+
+.sidebarTitle {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.linkBtn {
+  border: none;
+  background: transparent;
+  color: #0b65c2;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.shelfList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.shelfItem {
+  width: fit-content;
+  background: none;
+  border: none;
+  padding: 4px 0;
+  margin: 0;
+  text-align: left;
+  cursor: pointer;
+
+  font-size: 13px;
+  color: #0b65c2;
+  font-family: inherit;
+}
+
+.shelfItem:hover {
+  text-decoration: underline;
+}
+
+.shelfItem.active {
+  font-weight: 700;
+  text-decoration: none;
+}
+
+/* Remove button styles for shelf items */
+.shelfItem,
+.shelfItem:hover,
+.shelfItem:active,
+.shelfItem:focus,
+.shelfItem:focus-visible {
+  background: none;
+  border: none;
+  outline: none;
+  box-shadow: none;
+}
+
+.sidebarSectionTitle {
+  margin-top: 10px;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.btnSmall {
+  margin-top: 10px;
+  padding: 6px 10px;
+  font-size: 12px;
+  border: 1px solid #cfcfcf;
+  background: #f7f7f7;
+  border-radius: 3px;
+}
+
+/* ---------- CONTENT ---------- */
+
+.pageTitle {
+  margin: 0 0 12px 0;
+  font-size: 18px;
+}
+
+/* ---------- GRID ---------- */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 16px;
+}
+
+/* ---------- BOOK CARDS ---------- */
+
+.coverWrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  background: #f2f2f2;
+  border: 1px solid #ddd;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.coverPlaceholder {
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: #666;
+  font-size: 12px;
+  padding: 6px;
+  text-align: center;
+}
+
+.deleteBtn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  border: 1px solid rgba(0,0,0,0.15);
+  background: rgba(255,255,255,0.9);
+  border-radius: 3px;
+  padding: 4px 6px;
+  cursor: pointer;
+  opacity: 0;
+}
+
+.coverWrap:hover .deleteBtn {
+  opacity: 1;
+}
+
+.favoriteBtn {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  border: none;
+  background: rgba(255,255,255,0.9);
+  border-radius: 50%;
+  padding: 4px 6px;
+  font-size: 16px;
+  cursor: pointer;
+  opacity: 0;
+  color: #f5a623; /* gold star */
+}
+
+.coverWrap:hover .favoriteBtn {
+  opacity: 1;
+}
+
+.favoriteBtn:hover {
+  transform: scale(1.1);
+}
+
+
+.meta {
+  margin-top: 6px;
+  line-height: 1.2;
+}
+
+.title {
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.author {
+  font-size: 12px;
+  color: #555;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

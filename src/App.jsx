@@ -1,80 +1,124 @@
 import { useState, useEffect } from "react";
-import BookList from "./components/BookList";
-import { Routes, Route, Link } from "react-router-dom";
+import { Routes, Route, Link, Navigate } from "react-router-dom";
 import CatalogPage from "./pages/CatalogPage";
 import SearchPage from "./pages/SearchPage";
-import { Navigate } from "react-router-dom";
 
 function App() {
   const [books, setBooks] = useState(() => {
     const storedBooks = localStorage.getItem("books");
-    return storedBooks ? JSON.parse(storedBooks) : [];
+    const parsed = storedBooks ? JSON.parse(storedBooks) : [];
+
+    // Normalize old books to support shelves
+    return parsed.map((b) => ({
+      shelves: [],
+      ...b,
+    }));
   });
 
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [feedbackMessage, setFeedbackMessage] = useState("");
+  const [activeShelf, setActiveShelf] = useState("all");
 
-
-  // save books to localStorage whenever 'books' state changes
+  // Persist books
   useEffect(() => {
     localStorage.setItem("books", JSON.stringify(books));
   }, [books]); // run useEffect whenever 'books' changes
 
-  function addBook(book) {
-    setBooks((prevBooks) => [...prevBooks, book]);
+  /* -------------------- HELPERS -------------------- */
 
-    setFeedbackMessage(`"${book.title}" added to your catalog`);
+  function booksAreSame(a, b) {
+    if (a.isbn && b.isbn) {
+      return a.isbn === b.isbn;
+    }
 
-    // Clear message after 2 seconds
-    setTimeout(() => {
-      setFeedbackMessage("");
-    }, 2000);
+    return (
+      a.title.toLowerCase() === b.title.toLowerCase() &&
+      a.author.toLowerCase() === b.author.toLowerCase()
+    );
   }
 
-  function addBookFromSearch(apiBook) {
-    addBook({
-      title: apiBook.title,
-      author: apiBook.author,
+  function bookHasShelf(book, shelf) {
+    return book.shelves?.includes(shelf);
+  }
+
+  /* -------------------- BOOK ACTIONS -------------------- */
+
+  function addBook(book) {
+    setBooks((prevBooks) => {
+      const exists = prevBooks.some((b) => booksAreSame(b, book));
+      if (exists) return prevBooks;
+
+      return [
+        ...prevBooks,
+        {
+          ...book,
+          shelves: [],
+        },
+      ];
     });
   }
 
   function handleDeleteBook(indexToDelete) {
-    const updatedBooks = books.filter((_, index) => index !== indexToDelete);
-    setBooks(updatedBooks);
+    setBooks((prev) =>
+      prev.filter((_, index) => index !== indexToDelete)
+    );
   }
+
+  function toggleShelf(book, shelf) {
+    setBooks((prevBooks) =>
+      prevBooks.map((b) =>
+        booksAreSame(b, book)
+          ? {
+              ...b,
+              shelves: bookHasShelf(b, shelf)
+                ? b.shelves.filter((s) => s !== shelf)
+                : [...b.shelves, shelf],
+            }
+          : b
+      )
+    );
+  }
+
+  function isBookInCatalog(book) {
+    return books.some((b) => booksAreSame(b, book));
+  }
+
+  /* -------------------- SEARCH -------------------- */
 
   async function handleSearchSubmit(e) {
     e.preventDefault();
-
     if (searchQuery.trim() === "") return;
 
     setIsSearching(true);
 
     try {
       const response = await fetch(
-        `https://openlibrary.org/search.json?q=${encodeURIComponent(searchQuery)}`
+        `https://openlibrary.org/search.json?q=${encodeURIComponent(
+          searchQuery
+        )}`
       );
 
       const data = await response.json();
 
       const results = data.docs.slice(0, 10).map((doc) => {
-        let coverUrl = null;
+        const isbn =
+          doc.isbn && doc.isbn.length > 0 ? doc.isbn[0] : null;
 
-        if (doc.cover_edition_key) {
+        let coverUrl = null;
+        if (isbn) {
+          coverUrl = `https://covers.openlibrary.org/b/isbn/${isbn}-M.jpg`;
+        } else if (doc.cover_edition_key) {
           coverUrl = `https://covers.openlibrary.org/b/olid/${doc.cover_edition_key}-M.jpg`;
-        } else if (doc.isbn && doc.isbn.length > 0) {
-          coverUrl = `https://covers.openlibrary.org/b/isbn/${doc.isbn[0]}-M.jpg`;
         }
 
         return {
           title: doc.title,
           author: doc.author_name ? doc.author_name[0] : "Unknown",
+          isbn,
           coverUrl,
         };
       });
-
 
       setSearchResults(results);
     } catch (error) {
@@ -84,6 +128,14 @@ function App() {
     }
   }
 
+  /* -------------------- FILTERING -------------------- */
+
+  const visibleBooks =
+    activeShelf === "all"
+      ? books
+      : books.filter((b) => b.shelves.includes(activeShelf));
+
+  /* -------------------- ROUTES -------------------- */
 
   return (
     <div>
@@ -92,26 +144,19 @@ function App() {
         <Link to="/search">Search</Link>
       </nav>
 
-      {feedbackMessage && (
-        <div style={{
-          background: "#e6fffa",
-          border: "1px solid #38b2ac",
-          padding: "8px 12px",
-          margin: "12px 0",
-          borderRadius: "4px"
-        }}>
-          {feedbackMessage}
-        </div>
-      )}
-      
       <Routes>
-        <Route path="/" element={<Navigate to="/catalog" />} /> 
+        <Route path="/" element={<Navigate to="/catalog" />} />
+
         <Route
           path="/catalog"
           element={
             <CatalogPage
-              books={books}
+              books={visibleBooks}
+              allBooks={books}
+              activeShelf={activeShelf}
+              onShelfChange={setActiveShelf}
               onDeleteBook={handleDeleteBook}
+              onToggleShelf={toggleShelf}
             />
           }
         />
@@ -128,6 +173,7 @@ function App() {
               }
               onSearchSubmit={handleSearchSubmit}
               onAddBook={addBook}
+              isBookInCatalog={isBookInCatalog}
             />
           }
         />
@@ -137,5 +183,3 @@ function App() {
 }
 
 export default App;
-
-
